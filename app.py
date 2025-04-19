@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, jsonify
+from flask import Flask, request, jsonify, render_template
 import os
 from dotenv import load_dotenv
 import psycopg2
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS "message" (
 """)
 
 @app.route("/api/course",methods=["POST","DELETE","PATCH"])
-def home():
+def course():
   data = request.get_json()
   # Sample data we get from client
   {
@@ -94,6 +94,7 @@ You are used in an api for a learning platform, please generate some json data.
 The user wants to learn: [{genai_response_obj.get("title")}] - [{genai_response_obj.get("description")}]
 These are some notes the user inputed, use these notes to make a plan that fits his age and learning style: [{data.get("notes")}]
 Please generate a full plan for the user to learn, this plan will always contain in the biggening "general" then lessons of the thing the user wants to learn, your data will be used to create an entety in a database.
+Always include the user's name in the notes.
 Responde with the following strict schema example with only topic and id:
 
 [
@@ -119,14 +120,18 @@ Responde with the following strict schema example with only topic and id:
 
     genai_response_obj = json.loads(genai_response.text)
 
+    first_done = False
     for planItem in genai_response_obj:
       with connection:
         with connection.cursor() as cursor:
           cursor.execute(
             """
-INSERT INTO "planItem" (course,content) VALUES (%s,%s);
+INSERT INTO "planItem" (course,content) VALUES (%s,%s) RETURNING id;
 """,(course_id, planItem.get("topic"))
           )
+          if first_done == False:
+            first_done = True
+            first_lesson=cursor.fetchone()[0]
 
           # now notes then start working on convo
     
@@ -168,10 +173,10 @@ INSERT INTO "note" (course,content) VALUES (%s,%s);
 """,(course_id, note.get("note"))
           )
 
-    return "", 202
+    return jsonify({"title":titleAndDescription.get("title"),"description": titleAndDescription.get("description"),"course_id":course_id,"first_lesson":first_lesson}), 202
   
 
-@app.route("/chat/send/<int:courseID>/<int:planItemID>",methods=["GET"])
+@app.route("/api/chat/send/<int:courseID>/<int:planItemID>",methods=["GET"])
 def sendToChat(courseID,planItemID):
   data = request.get_json()
 
@@ -272,7 +277,7 @@ INSERT INTO "message" (course,planitem,content,ai) VALUES (
 
   return jsonify({"response": obj_genai_response.get("response")}),200
 
-@app.route("/api/get_conversation/<int:courseID>/<int:planItemID>")
+@app.route("/api/chat/get_conversation/<int:courseID>/<int:planItemID>")
 def get_conversation(courseID,planItemID):
   with connection:
     with  connection.cursor() as cursor:
@@ -295,3 +300,8 @@ WHERE "message"."planitem" = %s AND "message"."course" = %s;
         )
 
   return jsonify(history), 200
+
+
+@app.route("/")
+def index():
+  return render_template("index.html")
