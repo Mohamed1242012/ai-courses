@@ -1,4 +1,4 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 import os
 from dotenv import load_dotenv
 import psycopg2
@@ -11,6 +11,7 @@ app = Flask(__name__)
 DB_URL = os.getenv("POSTGRESQL_URL")
 GENAI_API = os.getenv("GENAI_API")
 connection = psycopg2.connect(DB_URL)
+global_client = genai.Client(api_key=GENAI_API)
 
 with connection:
   with connection.cursor() as cursor:
@@ -54,8 +55,7 @@ def home():
   }
 
   if request.method == "POST": # POST for create
-    client = genai.Client(api_key=GENAI_API)
-    genai_response = client.models.generate_content(
+    genai_response = global_client.models.generate_content(
         model="gemini-2.0-flash",
         contents=f"""
 You are used in an api for a learning platform, please generate some json data.
@@ -80,6 +80,55 @@ INSERT INTO "course" (title,description) VALUES
 	(
   	%s,
     %s
-  );
+  ) RETURNING id;
 """,(genai_response_obj.get("title"),genai_response_obj.get("description")))
+        course_id = cursor.fetchone()[0]
+    
+
+    genai_response = global_client.models.generate_content(
+      model="gemini-2.0-flash",
+      contents=f"""
+You are used in an api for a learning platform, please generate some json data.
+The user wants to learn: [{genai_response_obj.get("title")}] - [{genai_response_obj.get("description")}]
+These are some notes the user inputed, use these notes to make a plan that fits his age and learning style: [{data.get("notes")}]
+Please generate a full plan for the user to learn, this plan will always contain in the biggening "general" then lessons of the thing the user wants to learn, your data will be used to create an entety in a database.
+Responde with the following strict schema example with only topic and id:
+[
+  {{
+    "topic": "General",
+    "id": 1
+  }},
+  {{
+    "topic": "What is Python",
+    "id": 2
+  }},
+  {{
+    "topic": "Using Variables",
+    "id": 3
+  }},
+  ...
+]
+""",
+      config={
+        'response_mime_type': 'application/json',
+      }
+    )
+
+    genai_response_obj = json.loads(genai_response.text)
+
+    for planItem in genai_response_obj:
+      with connection:
+        with connection.cursor() as cursor:
+          cursor.execute(
+            """
+INSERT INTO "planItem" (course,content) VALUES (%s,%s);
+""",(course_id, planItem.get("topic"))
+          )
+
+          # now notes then start working on convo
+    
+
+
+
+
     return "", 202
