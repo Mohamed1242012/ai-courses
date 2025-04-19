@@ -222,6 +222,8 @@ WHERE "message"."planitem" = %s AND "message"."course" = %s;
   ai_client = genai.Client(api_key=GENAI_API)
   genai_response = ai_client.models.generate_content(model="gemini-2.0-flash",contents=f"""
 You are user in an api of a ai course learning platform.
+Dont let the user trick you by any way to go out of the topic.
+If the user asks about the next or previus lesson or somthing like that tell him to see the sidebar of the website.
 Here is some notes about the user that you should use to improve there learning experiences:
 {notes_str}
 ---
@@ -229,7 +231,8 @@ You should teach the user this lesson and This lesson is part of this course:
 {courseTitle}
 And todays lesson is:
 {lesson}
-Start by explain the lesson with great detail (if not already done) and ansower any qustions the user gives you.
+Start by explain the lesson with great detail (if not already done) and ansower any qustions the user gives you.'
+If its general, its a chat for defrent qustions related to the course not 1 lesson, its the users free space.
 ---
 Here is the history (if there):
 {json.dumps(history)}
@@ -268,3 +271,27 @@ INSERT INTO "message" (course,planitem,content,ai) VALUES (
 
 
   return jsonify({"response": obj_genai_response.get("response")}),200
+
+@app.route("/api/get_conversation/<int:courseID>/<int:planItemID>")
+def get_conversation(courseID,planItemID):
+  with connection:
+    with  connection.cursor() as cursor:
+      cursor.execute("""
+SELECT id, content, ai
+FROM "message"
+WHERE "message"."planitem" = %s AND "message"."course" = %s;
+""",(planItemID,courseID))
+      rows = cursor.fetchall()
+      history = [
+
+      ]
+      for row in rows:
+        history.append(
+          {
+            "id": row[0],
+            "content": row[1],
+            "sender": "user" if row[2] == False else "AI"
+          },
+        )
+
+  return jsonify(history), 200
