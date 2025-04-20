@@ -1,1 +1,1 @@
-# ai-courses
+# AI Powered 
