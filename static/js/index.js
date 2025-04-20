@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function (arg) {
 
   document
     .getElementById("all-courses")
-    .addEventListener("click", function (e) {
+    .addEventListener("click", async function (e) {
       if (
         e.target.classList.contains("delete-btn") ||
         e.target.closest(".delete-btn")
@@ -131,7 +131,6 @@ document.addEventListener("DOMContentLoaded", function (arg) {
         const button = e.target.closest(".delete-btn");
         const course_id = button.getAttribute("data-course-id");
 
-        // Show confirmation alert
         if (confirm("Are you sure you want to delete this course?")) {
           const key = "courses";
           let courses = JSON.parse(localStorage.getItem(key)) || [];
@@ -139,10 +138,25 @@ document.addEventListener("DOMContentLoaded", function (arg) {
             (course) => course.course_id !== parseInt(course_id)
           );
           if (courses.length === 0) {
-            localStorage.removeItem(key); // Remove the key if no courses are left
+            localStorage.removeItem(key);
           } else {
             localStorage.setItem(key, JSON.stringify(courses, null, 2));
           }
+          await fetch("/api/course", {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ course_id: parseInt(course_id) }),
+          })
+            .then((res) => {
+              if (!res.ok) {
+                throw new Error("Failed to delete course on server.");
+              }
+            })
+            .catch((err) => {
+              alert(`Failed to delete course. Please try again. ${err}`);
+            });
           window.location.hash = "#courses";
           window.location.reload();
         }

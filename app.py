@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS "message" (
 );
 
 """)
+    cursor.close()
 
 @app.route("/api/course",methods=["POST","DELETE","PATCH"])
 def course():
@@ -57,6 +58,25 @@ def course():
     "learn": "Python",
     "notes": "I have some scratch experience."
   }
+
+  if request.method == "DELETE":
+    with get_db_connection() as connection:
+      with connection.cursor() as cursor:
+        # Delete all notes associated with the course
+        cursor.execute('DELETE FROM "note" WHERE course = %s;', (data.get("course_id"),))
+        
+        # Delete all messages associated with the course
+        cursor.execute('DELETE FROM "message" WHERE course = %s;', (data.get("course_id"),))
+        
+        # Delete all plan items associated with the course
+        cursor.execute('DELETE FROM "planItem" WHERE course = %s;', (data.get("course_id"),))
+        
+        # Finally, delete the course itself
+        cursor.execute('DELETE FROM "course" WHERE id = %s;', (data.get("course_id"),))
+        
+        cursor.close()
+    return "", 200
+
 
   if request.method == "POST": # POST for create
     genai_response = global_client.models.generate_content(
@@ -87,6 +107,7 @@ INSERT INTO "course" (title,description) VALUES
   ) RETURNING id;
 """,(genai_response_obj.get("title"),genai_response_obj.get("description")))
         course_id = cursor.fetchone()[0]
+        cursor.close()
 
     titleAndDescription = genai_response_obj
     
@@ -136,6 +157,7 @@ INSERT INTO "planItem" (course,content) VALUES (%s,%s) RETURNING id;
           if first_done == False:
             first_done = True
             first_lesson=cursor.fetchone()[0]
+          cursor.close()
 
           # now notes then start working on convo
     
@@ -176,6 +198,7 @@ Responde with the following strict schema example on python:
 INSERT INTO "note" (course,content) VALUES (%s,%s);
 """,(course_id, note.get("note"))
           )
+          cursor.close()
 
     return jsonify({"title":titleAndDescription.get("title"),"description": titleAndDescription.get("description"),"course_id":course_id,"first_lesson":first_lesson}), 202
   
@@ -188,6 +211,7 @@ def sendToChat(courseID,planItemID):
     with  connection.cursor() as cursor:
       cursor.execute('SELECT id,content FROM "note" where course = %s;',(courseID,))
       rows = cursor.fetchall()
+      cursor.close()
       notes_str = "Notes:\n"
       for row in rows:
         notes_str += f"{row[0]}- {row[1]}\n"
@@ -197,11 +221,13 @@ def sendToChat(courseID,planItemID):
     with  connection.cursor() as cursor:
       cursor.execute('SELECT title FROM "course" where id = %s;',(courseID,))
       courseTitle = cursor.fetchone()
+      cursor.close()
 
   with get_db_connection() as connection:
     with  connection.cursor() as cursor:
       cursor.execute('SELECT content FROM "planItem" where id = %s AND course = %s;',(planItemID,courseID))
       lesson = cursor.fetchone()
+      cursor.close()
 
   with get_db_connection() as connection:
     with  connection.cursor() as cursor:
@@ -222,12 +248,14 @@ WHERE "message"."planitem" = %s AND "message"."course" = %s;
             "sender": "user" if row[2] == False else "AI"
           },
         )
+      cursor.close()
 
 
   with get_db_connection() as connection:
     with connection.cursor() as cursor:
       cursor.execute('SELECT id,content FROM "planItem" WHERE course = %s',(courseID,))
       rows = cursor.fetchall()
+      cursor.close()
   all_plan_items = []
   for row in rows:
     all_plan_items.append({"id": row[0],"content": row[1]})
@@ -263,9 +291,13 @@ Here is all the lessons after and before this lesson:
 Now the user typed:
 [{data.get("message")}]
 ---
-Respond with the following strict scheema in json:
+in the json output note and its
+Any note you noticed about the user in his last message, that could improve teaching or learning experience, not all things should be stored only store improtant data such as past knowlege or learning patterns because we are tight on space. Dont repeate existing notes. If none, put null in json notes.
+---
+Respond with the following strict scheema in json with only one note entity:
 {{
-  "response": "Your markdown fully formated response here"
+  "response": "Your markdown fully formated response here",
+  "note": "notes"
 }}
 """,config={
   'response_mime_type': 'application/json',
@@ -282,6 +314,7 @@ INSERT INTO "message" (course,planitem,content,ai) VALUES (
 )
 """,(courseID,planItemID,data.get("message"),False)
       )
+      cursor.close()
 
   with get_db_connection() as connection:
       with connection.cursor() as cursor:
@@ -291,9 +324,17 @@ INSERT INTO "message" (course,planitem,content,ai) VALUES (
   )
   """,(courseID,planItemID,obj_genai_response.get("response"),True)
         )
+        cursor.close()
 
+  if obj_genai_response.get("note") != None:
+    with get_db_connection() as connection:
+      with connection.cursor() as cursor:
+        cursor.execute("""
+INSERT INTO "note" (course,content) VALUES (%s,%s);
+""",(courseID,obj_genai_response.get("note")))
+        cursor.close()
 
-  return jsonify({"response": obj_genai_response.get("response")}),200
+  return jsonify({"response": obj_genai_response.get("response"),"note": obj_genai_response.get("note")}),200
 
 @app.route("/api/chat/get_conversation/<int:courseID>/<int:planItemID>")
 def get_conversation(courseID,planItemID):
@@ -305,6 +346,7 @@ FROM "message"
 WHERE "message"."planitem" = %s AND "message"."course" = %s;
 """,(planItemID,courseID))
       rows = cursor.fetchall()
+      cursor.close()
       history = [
 
       ]
@@ -331,11 +373,13 @@ def chat(course_id,lesson_id):
     with connection.cursor() as cursor:
       cursor.execute('SELECT title FROM "course" WHERE id = %s',(course_id,))
       course_name = cursor.fetchone()[0]
+      cursor.close()
 
   with get_db_connection() as connection:
     with connection.cursor() as cursor:
       cursor.execute('SELECT content FROM "planItem" WHERE id = %s',(lesson_id,))
       lesson_name = cursor.fetchone()[0]
+      cursor.close
 
   return render_template("chat.html", course_name = course_name, lesson_name=lesson_name, course_id=course_id,lesson_id=lesson_id)
 
@@ -346,6 +390,7 @@ def get_all_plan_items(course_id):
     with connection.cursor() as cursor:
       cursor.execute('SELECT id,content FROM "planItem" WHERE course = %s',(course_id,))
       rows = cursor.fetchall()
+      cursor.close()
   all_plan_items = []
   for row in rows:
     all_plan_items.append({"id": row[0],"content": row[1]})

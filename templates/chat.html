@@ -306,14 +306,26 @@
 
               let form = document.getElementById("send-form");
               let chatBox = document.getElementById("chat-box");
-              function addMessage(message, ai_or_user, text) {
-                chatBox.innerHTML += `
-            <div class="${ai_or_user}-message p-2 d-flex align-items-center mb-2">
-                      <span class="${ai_or_user}-h p-2 m-3">${text}: </span>
+              function addMessage(message, note,ai) {
+                if (ai==false){
+                  chatBox.innerHTML += `
+            <div class="user-message p-2 d-flex align-items-center mb-2">
+                      <span class="user-h p-2 m-3">YOU: </span>
                       <div style="font-size: 0.8rem;" class="markdownDiv mt-3">
                       ${marked.parse(message)}</div>
                     </div>
             `;
+                }else{
+                  chatBox.innerHTML += `
+            <div class="ai-message p-2 d-flex align-items-center mb-2">
+                      <span class="ai-h p-2 m-3">AI: </span>
+                        <div style="font-size: 0.8rem;" class="markdownDiv mt-3">
+                        ${note ? `<p class="text-body-secondary">AI stored in his memory: ${note}</p>` : ''}
+                      ${marked.parse(message)}</div>
+                    </div>
+            `;
+                }
+
                 chatBox.scrollTop = chatBox.scrollHeight;
                 hljs.highlightAll();
                 hljs.addPlugin(new CopyButtonPlugin());
@@ -325,9 +337,9 @@
                   json = json.sort((a, b) => a.id - b.id);
                   for (let message of json) {
                     if (message.sender == "user") {
-                      addMessage(message.content, "user", "YOU");
+                      addMessage(message.content, null, false);
                     } else {
-                      addMessage(message.content, "ai", "AI");
+                      addMessage(message.content, json.note, true);
                     }
                   }
                 });
@@ -347,12 +359,12 @@
                   id="spinner"
                 ></div>`
 
-                addMessage(prompt, "user", "YOU");
+                addMessage(prompt, null, false);
 
                 sendMessage(prompt)
                   .then((res) => res.json())
                   .then((json) => {
-                    addMessage(json.response, "ai", "AI");
+                    addMessage(json.response, json.note, true);
                     document.getElementById("prompt-text").disabled = false;
                     document.getElementById("send-btn").disabled = false;
                     document.getElementById("send-btn").innerHTML = `
