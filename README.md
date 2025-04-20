@@ -36,10 +36,11 @@ Change the `GEN_API` variable to your real API key, you can generate one from [h
 Now start the docker containers
 
 ```bash
-docker compose up --build -d
+sudo docker compose up --build -d
 ```
 
 Open your browser and type `http://localhost:80`
 
 ## License
+
 This project is licensed under the GNU General Public License Version 3 - see the [LICENSE](LICENSE) file for details.
