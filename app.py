@@ -8,6 +8,7 @@ import json
 load_dotenv()
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 DB_URL = os.getenv("POSTGRESQL_URL")
 GENAI_API = os.getenv("GENAI_API")
 
