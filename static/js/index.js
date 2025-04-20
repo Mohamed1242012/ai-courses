@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function (arg) {
           });
       })
       .catch((err) => {
-        alert(`Failed to create course. Please try again.\${err}`);
+        alert(`Failed to create course. Please try again.`);
         location.reload();
       });
   });
@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function (arg) {
               }
             })
             .catch((err) => {
-              alert(`Failed to delete course. Please try again. ${err}`);
+              alert(`Failed to delete course. Please try again.`);
             });
           window.location.hash = "#courses";
           window.location.reload();

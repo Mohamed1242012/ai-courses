@@ -26,7 +26,7 @@ Then rename the `example.env` file into `.env`, open the new renamed file.
 
 ```bash
 # Database - URL must match the data in the docker compose file
-POSTGRESQL_URL=postgresql://user:password@postgres:5432/ai-course
+POSTGRESQL_URL=postgresql://user:password@postgres:5432/ai-courses
 # Gemini API
 GENAI_API=AIzaSyBQBf-XhweIAfdjHkhJ78763 # Not a real API Key
 ```
