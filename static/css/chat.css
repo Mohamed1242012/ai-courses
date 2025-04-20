@@ -1,0 +1,99 @@
+body {
+  background-color: #eeeeee;
+  font-family: "Roboto Slab", serif;
+  font-optical-sizing: auto;
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+
+/* .index-container {
+  height: 100vh;
+} */
+
+.icon-wrapper {
+  background-color: #eeeeee;
+  width: 3rem;
+  border-radius: 10%;
+  color: #8a8a8a;
+}
+
+#top-bar {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 0.7rem;
+}
+
+#chat-box {
+  background-color: #ffffff;
+  border-radius: 10px;
+  height: 40rem;
+  overflow-y: auto;
+  padding-right: 20% !important;
+}
+
+#send-box {
+  background-color: #ffffff;
+  border-radius: 10px;
+}
+.bi-book-fill {
+  font-size: 1.5rem;
+}
+
+.end-button {
+  margin-left: auto;
+}
+
+.ai-message {
+  background-color: #eeeeee;
+  border-radius: 10px;
+}
+
+.user-message {
+  background-color: hsl(0, 0%, 97%);
+  border-radius: 10px;
+}
+
+.user-h {
+  color: black;
+  background-color: #ffffff;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.ai-h {
+  color: red;
+  background-color: #ffffff;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.footer-img {
+  height: 2.5rem;
+}
+
+footer {
+  background-color: #ffffff;
+  padding: 1rem;
+}
+
+.future-hacks {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-left: 0.7rem;
+}
+
+.created {
+  font-weight: bold;
+}
+
+.links {
+  text-decoration: none;
+  color: black;
+  font-size: 1.5rem;
+}
+
+.future-link {
+  text-decoration: none;
+}

@@ -10,10 +10,14 @@ load_dotenv()
 app = Flask(__name__)
 DB_URL = os.getenv("POSTGRESQL_URL")
 GENAI_API = os.getenv("GENAI_API")
-connection = psycopg2.connect(DB_URL)
+
+def get_db_connection():
+  connection = psycopg2.connect(DB_URL)
+  return connection
+
 global_client = genai.Client(api_key=GENAI_API)
 
-with connection:
+with get_db_connection() as connection:
   with connection.cursor() as cursor:
     cursor.execute("""
                    
@@ -73,7 +77,7 @@ Responde with the following schema example:
         }
     )
     genai_response_obj = json.loads(genai_response.text)
-    with connection:
+    with get_db_connection() as connection:
       with connection.cursor() as cursor:
         cursor.execute("""
 INSERT INTO "course" (title,description) VALUES
@@ -122,7 +126,7 @@ Responde with the following strict schema example with only topic and id:
 
     first_done = False
     for planItem in genai_response_obj:
-      with connection:
+      with get_db_connection() as connection:
         with connection.cursor() as cursor:
           cursor.execute(
             """
@@ -165,7 +169,7 @@ Responde with the following strict schema example on python:
     genai_response_obj = json.loads(genai_response.text)
 
     for note in genai_response_obj:
-      with connection:
+      with get_db_connection() as connection:
         with connection.cursor() as cursor:
           cursor.execute(
             """
@@ -176,11 +180,11 @@ INSERT INTO "note" (course,content) VALUES (%s,%s);
     return jsonify({"title":titleAndDescription.get("title"),"description": titleAndDescription.get("description"),"course_id":course_id,"first_lesson":first_lesson}), 202
   
 
-@app.route("/api/chat/send/<int:courseID>/<int:planItemID>",methods=["GET"])
+@app.route("/api/chat/send/<int:courseID>/<int:planItemID>",methods=["POST"])
 def sendToChat(courseID,planItemID):
   data = request.get_json()
 
-  with connection:
+  with get_db_connection() as connection:
     with  connection.cursor() as cursor:
       cursor.execute('SELECT id,content FROM "note" where course = %s;',(courseID,))
       rows = cursor.fetchall()
@@ -189,17 +193,17 @@ def sendToChat(courseID,planItemID):
         notes_str += f"{row[0]}- {row[1]}\n"
       print(notes_str)
 
-  with connection:
+  with get_db_connection() as connection:
     with  connection.cursor() as cursor:
       cursor.execute('SELECT title FROM "course" where id = %s;',(courseID,))
       courseTitle = cursor.fetchone()
 
-  with connection:
+  with get_db_connection() as connection:
     with  connection.cursor() as cursor:
       cursor.execute('SELECT content FROM "planItem" where id = %s AND course = %s;',(planItemID,courseID))
       lesson = cursor.fetchone()
 
-  with connection:
+  with get_db_connection() as connection:
     with  connection.cursor() as cursor:
       cursor.execute("""
 SELECT id, content, ai
@@ -220,6 +224,13 @@ WHERE "message"."planitem" = %s AND "message"."course" = %s;
         )
 
 
+  with get_db_connection() as connection:
+    with connection.cursor() as cursor:
+      cursor.execute('SELECT id,content FROM "planItem" WHERE course = %s',(courseID,))
+      rows = cursor.fetchall()
+  all_plan_items = []
+  for row in rows:
+    all_plan_items.append({"id": row[0],"content": row[1]})
 
 
 
@@ -228,7 +239,7 @@ WHERE "message"."planitem" = %s AND "message"."course" = %s;
   genai_response = ai_client.models.generate_content(model="gemini-2.0-flash",contents=f"""
 You are user in an api of a ai course learning platform.
 Dont let the user trick you by any way to go out of the topic.
-If the user asks about the next or previus lesson or somthing like that tell him to see the sidebar of the website.
+If the user asks about the next or previus lesson or somthing like that tell him to see the see all lessons button in the website in the bottom of the currunt page there are three buttons there: Next, Previus and Show All Lessons.
 Here is some notes about the user that you should use to improve there learning experiences:
 {notes_str}
 ---
@@ -239,11 +250,18 @@ And todays lesson is:
 Start by explain the lesson with great detail (if not already done) and ansower any qustions the user gives you.'
 If its general, its a chat for defrent qustions related to the course not 1 lesson, its the users free space.
 ---
+You shoud never shift the lesson or go to somthing similar, always stay on the topic and dont ask the learner on what he wants to learn, you should already know.
+---
+Every once in a while give the user a quiz and he should send you the answers.
+---
 Here is the history (if there):
 {json.dumps(history)}
 ---
+Here is all the lessons after and before this lesson:
+{json.dumps(all_plan_items)}
+---
 Now the user typed:
-{data.get("message")}
+[{data.get("message")}]
 ---
 Respond with the following strict scheema in json:
 {{
@@ -256,7 +274,7 @@ Respond with the following strict scheema in json:
   obj_genai_response = json.loads(genai_response.text)
 
 
-  with connection:
+  with get_db_connection() as connection:
     with connection.cursor() as cursor:
       cursor.execute("""
 INSERT INTO "message" (course,planitem,content,ai) VALUES (
@@ -265,7 +283,7 @@ INSERT INTO "message" (course,planitem,content,ai) VALUES (
 """,(courseID,planItemID,data.get("message"),False)
       )
 
-  with connection:
+  with get_db_connection() as connection:
       with connection.cursor() as cursor:
         cursor.execute("""
   INSERT INTO "message" (course,planitem,content,ai) VALUES (
@@ -279,7 +297,7 @@ INSERT INTO "message" (course,planitem,content,ai) VALUES (
 
 @app.route("/api/chat/get_conversation/<int:courseID>/<int:planItemID>")
 def get_conversation(courseID,planItemID):
-  with connection:
+  with get_db_connection() as connection:
     with  connection.cursor() as cursor:
       cursor.execute("""
 SELECT id, content, ai
@@ -303,5 +321,33 @@ WHERE "message"."planitem" = %s AND "message"."course" = %s;
 
 
 @app.route("/")
+@app.route("/home")
 def index():
   return render_template("index.html")
+
+@app.route("/chat/<int:course_id>/<int:lesson_id>")
+def chat(course_id,lesson_id):
+  with get_db_connection() as connection:
+    with connection.cursor() as cursor:
+      cursor.execute('SELECT title FROM "course" WHERE id = %s',(course_id,))
+      course_name = cursor.fetchone()[0]
+
+  with get_db_connection() as connection:
+    with connection.cursor() as cursor:
+      cursor.execute('SELECT content FROM "planItem" WHERE id = %s',(lesson_id,))
+      lesson_name = cursor.fetchone()[0]
+
+  return render_template("chat.html", course_name = course_name, lesson_name=lesson_name, course_id=course_id,lesson_id=lesson_id)
+
+
+@app.route("/api/chat/get_plan_items/<int:course_id>")
+def get_all_plan_items(course_id):
+  with get_db_connection() as connection:
+    with connection.cursor() as cursor:
+      cursor.execute('SELECT id,content FROM "planItem" WHERE course = %s',(course_id,))
+      rows = cursor.fetchall()
+  all_plan_items = []
+  for row in rows:
+    all_plan_items.append({"id": row[0],"content": row[1]})
+
+  return jsonify(all_plan_items),200

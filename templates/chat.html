@@ -22,13 +22,355 @@
       integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD"
       crossorigin="anonymous"
     />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/chat.css') }}"
+    />
   </head>
   <body>
-    
+    <div class="container">
+      <div class="row">
+        <div class="col-12 mb-3">
+          <div id="top-bar" class="d-flex align-items-center">
+            <div class="icon-wrapper text-center me-2">
+              <i class="bi bi-book-fill"></i>
+            </div>
+            <p class="mb-0">{{ course_name }}</p>
+            <a href="/" class="btn btn-dark end-button"
+              ><i class="bi bi-house"></i> Home</a
+            >
+          </div>
+        </div>
+        <div
+          class="modal fade"
+          id="allPlanItems"
+          data-bs-backdrop="static"
+          data-bs-keyboard="false"
+          tabindex="-1"
+          aria-labelledby="appPlanScreenLable"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title fs-5" id="appPlanScreenLable">
+                  All lessons
+                </h1>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body">
+                <ul class="list-group" id="lessons_list_group"></ul>
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 mb-3">
+          <div id="chat-box" class="p-2">
+            <h2 class="mb-3">{{ lesson_name }}</h2>
+            <!-- <div class="ai-message p-2 d-flex align-items-center mb-2">
+              <p class="mb-0"><span class="user-h">AI: </span>Hello!</p>
+            </div>
+            <div class="user-message p-2 d-flex align-items-center mb-2">
+              <p class="mb-0"><span class="user-h">YOU: </span>Hi!</p>
+            </div> -->
+          </div>
+        </div>
+        <div class="col-12">
+          <div id="send-box" class="d-flex align-items-center p-2">
+            <form id="send-form" class="d-flex w-100">
+              <input
+                type="text"
+                name="prompt-text"
+                id="prompt-text"
+                class="form-control me-2"
+                placeholder="Type your message..."
+              />
+              <button
+                type="submit"
+                id="send-btn"
+                class="btn btn-dark flex-shrink-0"
+              >
+                <i class="bi bi-send"></i> Send
+              </button>
+            </form>
+          </div>
+        </div>
+        <div class="col-12 mb-3">
+          <div class="row">
+            <div class="col-md-6 col-sm-12">
+              <a class="btn btn-warning w-100 mt-3" id="prev-btn">Previus</a>
+            </div>
+            <div class="col-md-6 col-sm-12">
+              <a class="btn btn-success w-100 mt-3" id="next-btn">Next</a>
+            </div>
+            <div class="col-12 mt-3">
+              <button
+                class="btn btn-dark w-100"
+                data-bs-toggle="modal"
+                data-bs-target="#allPlanItems"
+              >
+                Show all lessons
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-5 text-center">
+      <div class="d-flex justify-content-center align-items-center">
+        <img
+          class="footer-img"
+          src="https://aigolearning.org/hackathon2021/assets/img/logo.png"
+          alt="Future Hacks 7 Hackathpn"
+        />
+        <p class="future-hacks mb-0">
+          A
+          <a class="future-link" href="https://futurehacks.net/"
+            >Future Hacks 7</a
+          >
+          Junior Category Project
+        </p>
+      </div>
+      <p class="mb-0 created mt-1">Created by Mohamed Elsayed (_mhd12)</p>
+      <div class="d-flex justify-content-center align-items-center">
+        <a
+          class="links me-4"
+          href="https://github.com/Mohamed1242012"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="GitHub Profile"
+        >
+          <i class="bi bi-github"></i>
+        </a>
+        <a
+          class="links me-4"
+          href="https://www.linkedin.com/in/mhd12/"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="LinkedIn Profile"
+        >
+          <i class="bi bi-linkedin"></i>
+        </a>
+        <a
+          class="links me-4"
+          href="https://me.devlix.org/"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="Personal Website"
+        >
+          <i class="bi bi-person-fill"></i>
+        </a>
+        <a
+          class="links"
+          href="https://www.youtube.com/@mhd12e"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="YouTube Channel"
+        >
+          <i class="bi bi-youtube"></i>
+        </a>
+      </div>
+    </footer>
+
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
       crossorigin="anonymous"
     ></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlightjs-line-numbers.js/dist/highlightjs-line-numbers.min.js"></script>
+
+    <script>
+            document.addEventListener("DOMContentLoaded", function (arg) {
+              document.getElementById("send-btn").disabled = true;
+              document.getElementById("prompt-text").focus();
+              let lessons_list_group = document.getElementById("lessons_list_group");
+
+              async function getLessons() {
+                const response = await fetch(
+                  `/api/chat/get_plan_items/{{ course_id }}`,
+                  {
+                    method: "GET",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  }
+                );
+                return response;
+              }
+
+              getLessons()
+                .then((res) => res.json())
+                .then((json) => {
+                  json = json.sort((a, b) => a.id - b.id);
+
+      let nextLesson = null;
+      let prevLesson = null;
+
+      for (let i = 0; i < json.length; i++) {
+        const item = json[i];
+
+        lessons_list_group.innerHTML += `
+          <li class="list-group-item row">
+            <div class="col-12"><div>${item.content}</div></div>
+            <div class="col-12">
+              <a class="w-100 btn btn-dark" href="/chat/{{ course_id }}/${item.id}">Go</a>
+            </div>
+          </li>
+        `;
+
+        if (item.id == {{ lesson_id }}) {
+          if (i + 1 < json.length) nextLesson = json[i + 1].id;
+          if (i - 1 >= 0) prevLesson = json[i - 1].id;
+        }
+      }
+
+      // 🟢 Set Next Button
+      let nextButton = document.getElementById("next-btn");
+      if (nextLesson !== null) {
+        nextButton.href = `/chat/{{ course_id }}/${nextLesson}`;
+      } else {
+        nextButton.disabled = true; // or disable it
+        prevButton.setAttribute("aria-disabled", "true");
+        prevButton.classList.add("disabled");
+
+
+      }
+
+      // 🔵 Set Prev Button
+      let prevButton = document.getElementById("prev-btn");
+      if (prevLesson !== null) {
+        prevButton.href = `/chat/{{ course_id }}/${prevLesson}`;
+      } else {
+        prevButton.disabled = true; // or disable it
+        prevButton.setAttribute("aria-disabled", "true");
+        prevButton.classList.add("disabled");
+      }
+
+
+                });
+
+              async function sendMessage(message) {
+                const response = await fetch(
+                  "/api/chat/send/{{ course_id }}/{{ lesson_id }}",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ message: message }),
+                  }
+                );
+                return response;
+              }
+
+              async function getConvo(message) {
+                const response = await fetch(
+                  "/api/chat/get_conversation/{{ course_id }}/{{ lesson_id }}",
+                  {
+                    method: "GET",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  }
+                );
+                return response;
+              }
+
+              let form = document.getElementById("send-form");
+              let chatBox = document.getElementById("chat-box");
+              function addMessage(message, ai_or_user, text) {
+                chatBox.innerHTML += `
+            <div class="${ai_or_user}-message p-2 d-flex align-items-center mb-2">
+                      <span class="${ai_or_user}-h p-2 m-3">${text}: </span>
+                      <div style="font-size: 0.8rem;" class="markdownDiv mt-3">
+                      ${marked.parse(message)}</div>
+                    </div>
+            `;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                hljs.highlightAll();
+                hljs.addPlugin(new CopyButtonPlugin());
+              }
+
+              getConvo()
+                .then((res) => res.json())
+                .then((json) => {
+                  json = json.sort((a, b) => a.id - b.id);
+                  for (let message of json) {
+                    if (message.sender == "user") {
+                      addMessage(message.content, "user", "YOU");
+                    } else {
+                      addMessage(message.content, "ai", "AI");
+                    }
+                  }
+                });
+
+              form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                let prompt = document.getElementById("prompt-text").value;
+                document.getElementById("prompt-text").value = "";
+
+                document.getElementById("prompt-text").disabled = true;
+
+                document.getElementById("send-btn").disabled = true;
+
+                document.getElementById("send-btn").innerHTML = `<div
+                  class="spinner-border me-2"
+                  role="status"
+                  id="spinner"
+                ></div>`
+
+                addMessage(prompt, "user", "YOU");
+
+                sendMessage(prompt)
+                  .then((res) => res.json())
+                  .then((json) => {
+                    addMessage(json.response, "ai", "AI");
+                    document.getElementById("prompt-text").disabled = false;
+                    document.getElementById("send-btn").disabled = false;
+                    document.getElementById("send-btn").innerHTML = `
+                    <i class="bi bi-send" id="send-btn"></i> Send
+                    `
+                    document.getElementById("prompt-text").focus();
+
+                  }).catch((err) => {
+                    alert("An error occurred in the server, please try again.");
+                    location.reload();
+                  })
+              });
+
+              document.getElementById("prompt-text").addEventListener("input", function () {
+                let sendButton = document.getElementById("send-btn");
+                sendButton.disabled = !this.value.trim();
+              });
+            });
+    </script>
   </body>
 </html>

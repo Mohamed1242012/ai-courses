@@ -29,3 +29,36 @@ body {
   border-radius: 10%;
   color: #8a8a8a;
 }
+
+.card {
+  height: 100%;
+}
+
+.footer-img {
+  height: 2.5rem;
+}
+
+footer {
+  background-color: #ffffff;
+  padding: 1rem;
+}
+
+.future-hacks {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-left: 0.7rem;
+}
+
+.created{
+  font-weight: bold;
+}
+
+.links{
+  text-decoration: none;
+  color: black;
+  font-size: 1.5rem;
+}
+
+.future-link{
+  text-decoration:none;
+}

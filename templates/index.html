@@ -112,13 +112,121 @@
                 AI to give you the best experience.
               </div>
             </div>
-            <button type="submit" class="btn btn-light w-100 p-2">
-              Start Learning
+            <button
+              type="submit"
+              class="btn btn-dark w-100 p-2"
+              id="submit-btn"
+            >
+              <div class="d-flex justify-content-center align-items-center">
+                <div
+                  class="spinner-border d-none me-2"
+                  role="status"
+                  id="spinner"
+                ></div>
+                Start Learning
+              </div>
             </button>
           </form>
         </div>
       </div>
     </div>
+
+    <div
+      class="modal fade"
+      id="finishCourseModal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="finishCourseModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="finishCourseModalLabel">
+              Course Created Successfully!
+            </h1>
+          </div>
+          <div class="modal-body">
+            Your course has been created. You can now refresh the page to see it
+            or visit the course directly.
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="refreshButton"
+              onclick="window.location.hash = '#courses';location.reload(); "
+            >
+              Refresh
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="visitCourseButton"
+            >
+              Visit Course
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-5 text-center">
+      <div class="d-flex justify-content-center align-items-center">
+        <img
+          class="footer-img"
+          src="https://aigolearning.org/hackathon2021/assets/img/logo.png"
+          alt="Future Hacks 7 Hackathpn"
+        />
+        <p class="future-hacks mb-0">
+          A
+          <a class="future-link" href="https://futurehacks.net/"
+            >Future Hacks 7</a
+          >
+          Junior Category Project
+        </p>
+      </div>
+      <p class="mb-0 created mt-1">Created by Mohamed Elsayed (_mhd12)</p>
+      <div class="d-flex justify-content-center align-items-center">
+        <a
+          class="links me-4"
+          href="https://github.com/Mohamed1242012"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="GitHub Profile"
+        >
+          <i class="bi bi-github"></i>
+        </a>
+        <a
+          class="links me-4"
+          href="https://www.linkedin.com/in/mhd12/"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="LinkedIn Profile"
+        >
+          <i class="bi bi-linkedin"></i>
+        </a>
+        <a
+          class="links me-4"
+          href="https://me.devlix.org/"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="Personal Website"
+        >
+          <i class="bi bi-person-fill"></i>
+        </a>
+        <a
+          class="links"
+          href="https://www.youtube.com/@mhd12e"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="YouTube Channel"
+        >
+          <i class="bi bi-youtube"></i>
+        </a>
+      </div>
+    </footer>
 
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
