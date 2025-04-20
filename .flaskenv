@@ -1,2 +1,3 @@
 FLASK_APP=app
-FLASK_DEBUG=True
+FLASK_ENV=production
+FLASK_RUN_PORT=80
